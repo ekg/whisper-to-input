@@ -69,6 +69,9 @@ class WhisperTranscriber {
                 throw Exception(context.getString(R.string.error_endpoint_unset))
             }
 
+			// Determine the model based on the endpoint
+			val model = if (endpoint.contains("groq.com")) "whisper-large-v3" else "whisper-1"
+
             // Make request
             val client = OkHttpClient()
             val request = buildWhisperRequest(
@@ -77,7 +80,8 @@ class WhisperTranscriber {
                 "$endpoint?encode=true&task=transcribe&language=$languageCode&word_timestamps=false&output=txt",
                 mediaType,
                 apiKey,
-                isRequestStyleOpenaiApi
+                isRequestStyleOpenaiApi,
+				model
             )
             val response = client.newCall(request).execute()
 
@@ -135,7 +139,8 @@ class WhisperTranscriber {
         url: String,
         mediaType: String,
         apiKey: String,
-        isRequestStyleOpenaiApi: Boolean
+        isRequestStyleOpenaiApi: Boolean,
+		model: String
     ): Request {
         // Please refer to the following for the endpoint/payload definitions:
         // - https://ahmetoner.com/whisper-asr-webservice/run/#usage
@@ -149,7 +154,7 @@ class WhisperTranscriber {
 
             if (isRequestStyleOpenaiApi) {
                 addFormDataPart("file", "@audio.m4a", fileBody)
-                addFormDataPart("model", "whisper-1")
+                addFormDataPart("model", model)
                 addFormDataPart("response_format", "text")
             }
         }.build()
